@@ -10,6 +10,16 @@ const adminService = {
     })
       .then(restaurants => cb(null, { restaurants }))
       .catch(err => cb(err))
+  },
+  deleteRestaurant: (req, cb) => {
+    return Restaurant.findByPk(req.params.id)
+      .then(restaurant => {
+        if (!restaurant) throw new Error("Restaurant didn't exist!")
+
+        return restaurant.destroy() // 直接使用sequelize的方法，所以不加raw: true
+      })
+      .then(deletedRestaurant => cb(null, { restaurant: deletedRestaurant }))
+      .catch(err => cb(err))
   }
 }
 
