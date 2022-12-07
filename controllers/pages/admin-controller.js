@@ -1,16 +1,10 @@
 const { Restaurant, User, Category } = require('../../models')
-// const { localFileHandler } = require('../helpers/file-helpers')
 const { imgurFileHandler } = require('../../helpers/file-helpers')
+const adminService = require('../../services/admin-services')
 
-const adminController = { // 修改這裡
+const adminController = {
   getRestaurants: (req, res, next) => {
-    Restaurant.findAll({
-      raw: true, // 把原本sequelize做出來的一包instance轉換成一包簡單的javascript物件
-      nest: true, // 如果不加nest: true，和類別相關的資料會長得像這樣: restaurants['Category.id']
-      include: [Category]
-    })
-      .then(restaurants => res.render('admin/restaurants', { restaurants }))
-      .catch(err => next(err))
+    adminService.getRestaurants(req, (err, data) => err ? next(err) : res.render('admin/restaurants', data))
   },
   createRestaurant: (req, res, next) => {
     Category.findAll({
