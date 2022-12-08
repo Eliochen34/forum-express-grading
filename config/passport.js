@@ -1,7 +1,13 @@
 const passport = require('passport')
 const LocalStrategy = require('passport-local')
+const passportJWT = require('passport-jwt')
 const bcrypt = require('bcryptjs')
-// const db = require('../models')
+
+const JWTStrategy = passportJWT.Strategy
+const ExtractJWT = passportJWT.ExtractJwt
+
+// const jwt = require('jsonwebtoken')
+
 const { User, Restaurant } = require('../models')
 // set up Passport strategy
 passport.use(new LocalStrategy(
@@ -23,6 +29,26 @@ passport.use(new LocalStrategy(
       })
   }
 ))
+
+const jwtOptions = {
+  jwtFromRequest: ExtractJWT.fromAuthHeaderAsBearerToken(), // 解析Jwt並從bearerToken找
+  secretOrKey: process.env.JWT_SECRET
+}
+
+// 把jwtOptions放進去，則會從bearerToken拿到JWT資訊(即可使用jwtPayload)
+passport.use(new JWTStrategy(jwtOptions, (jwtPayload, cb) => {
+  User.findByPk(jwtPayload.id, {
+    include: [
+      { model: Restaurant, as: 'FavoritedRestaurants' },
+      { model: Restaurant, as: 'LikedRestaurants' },
+      { model: User, as: 'Followers' },
+      { model: User, as: 'Followings' }
+    ]
+  })
+    .then(user => cb(null, user))
+    .catch(err => cb(err))
+}))
+
 // serialize and deserialize user
 passport.serializeUser((user, cb) => {
   cb(null, user.id)
