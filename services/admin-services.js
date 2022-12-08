@@ -1,5 +1,5 @@
 const { Restaurant, Category } = require('../models')
-// const { imgurFileHandler } = require('../../helpers/file-helpers')
+const { imgurFileHandler } = require('../helpers/file-helpers')
 
 const adminService = {
   getRestaurants: (req, cb) => {
@@ -9,6 +9,24 @@ const adminService = {
       include: [Category]
     })
       .then(restaurants => cb(null, { restaurants }))
+      .catch(err => cb(err))
+  },
+  postRestaurant: (req, cb) => {
+    const { name, tel, address, openingHours, description, categoryId } = req.body // 從 req.body 拿出表單裡的資料
+    if (!name) throw new Error('Restaurant name is required!') // name 是必填，若發先是空值就會終止程式碼，並在畫面顯示錯誤提示
+
+    const { file } = req // 取出檔案給file-helper處理後再create餐廳資料
+    return imgurFileHandler(file)
+      .then(filePath => Restaurant.create({ // 產生一個新的 Restaurant 物件實例，並存入資料庫
+        name,
+        tel,
+        address,
+        openingHours,
+        description,
+        image: filePath || null, // filePath ? filePath : null三元運算子的寫法
+        categoryId
+      }))
+      .then(newRestaurant => cb(null, { restaurant: newRestaurant }))
       .catch(err => cb(err))
   },
   deleteRestaurant: (req, cb) => {
